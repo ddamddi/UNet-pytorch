@@ -124,10 +124,10 @@ def main():
     mp.spawn(main_worker, nprocs=ngpus_per_node, 
              args=(ngpus_per_node, config))
 
-
 def main_worker(gpu, ngpus_per_node, config):
     global best_miou
     timer = Timer()
+    gpu = config.gpus[gpu]
 
     # set default gpu device id
     torch.cuda.set_device(gpu)
@@ -159,11 +159,11 @@ def main_worker(gpu, ngpus_per_node, config):
     # traindata = COCO_Dataset(split='train', transform=train_transform)
     # valdata = COCO_Dataset(split='validate', transform=val_transform)
 
-    traindata = dset.VOCSegmentation(root='../datasets/img_type_datsets', 
+    traindata = dset.VOCSegmentation(root='../datasets/img_type_datasets', 
                                      year='2012', 
                                      image_set='train', 
                                      transforms=train_transform)
-    validdata = dset.VOCSegmentation(root='../datasets/img_type_datsets', 
+    validdata = dset.VOCSegmentation(root='../datasets/img_type_datasets', 
                                      year='2012', 
                                      image_set='val', 
                                      transforms=val_transform)
