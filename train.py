@@ -123,11 +123,10 @@ def main():
     config.world_size = ngpus_per_node * config.world_size
     mp.spawn(main_worker, nprocs=ngpus_per_node, 
              args=(ngpus_per_node, config))
-
+             
 def main_worker(gpu, ngpus_per_node, config):
     global best_miou
     timer = Timer()
-    gpu = config.gpus[gpu]
 
     # set default gpu device id
     torch.cuda.set_device(gpu)
