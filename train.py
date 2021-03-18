@@ -22,9 +22,9 @@ best_miou = 0
 NUM_OF_CLASS = 20
 
 def train(model, trainloader, optimizer, criterion, writer, logger, args, epoch):
-    losses = []
-    mIoUs = []
-    pixel_accs = []
+    pixel_accs = utils.AverageMeter()
+    losses = utils.AverageMeter()
+    IoUs = utils.AverageMeter()
     metrics = {}
     
     model.train()
@@ -38,28 +38,35 @@ def train(model, trainloader, optimizer, criterion, writer, logger, args, epoch)
         pred = model(x)
         loss = criterion(pred, y)
 
-        losses.append(loss.item())
-        mIoUs.append(mIoU(pred, y))
-        pixel_accs.append(pixel_accuracy(pred, y))
+        # losses.append(loss.item())
+        losses.update(loss.item())
+        # mIoUs.append(mIoU(pred, y))
+        mIoUs.update(mIoU(pred, y))
+        # pixel_accs.append(pixel_accuracy(pred, y))
+        pixel_accs.update(pixel_accuracy(pred, y))
         
         optimizer.zero_grad()
         loss.backward()
         optimizer.step()
         
         if (step+1) % args.print_freq == 0 or (step+1) == len(trainloader):
-            metrics['loss'] = np.mean(losses)
-            metrics['mIoU'] = np.mean(mIoUs)
-            metrics['PixelAcc'] = np.mean(pixel_accs)
+            # metrics['loss'] = np.mean(losses)
+            metrics['loss'] = losses.avg
+            # metrics['mIoU'] = np.mean(mIoUs)
+            metrics['mIoU'] = mIoUs.avg
+            # metrics['PixelAcc'] = np.mean(pixel_accs)
+            metrics['PixelAcc'] = pixel_accs.avg
+
             print_log(metrics, epoch=epoch, total_epoch=args.epoch, step=step+1, total_step=len(trainloader), phase='train', prnt=logger.info)      
 
-    writer.add_scalar('Loss/train', np.mean(losses), epoch)
-    writer.add_scalar('mIoU/train', np.mean(mIoUs), epoch)
-    writer.add_scalar('PixelAcc/train', np.mean(pixel_accs), epoch)
+    writer.add_scalar('Loss/train', losses.avg, epoch)
+    writer.add_scalar('mIoU/train', mIoUs.avg, epoch)
+    writer.add_scalar('PixelAcc/train', pixel_accs.avg, epoch)
 
 def evaluate(model, valloader, criterion, writer, logger, args, epoch):
-    losses = []
-    mIoUs = []
-    pixel_accs = []
+    pixel_accs = utils.AverageMeter()
+    losses = utils.AverageMeter()
+    IoUs = utils.AverageMeter()
     metrics = {}
     global best_miou
 
@@ -73,20 +80,26 @@ def evaluate(model, valloader, criterion, writer, logger, args, epoch):
         pred = model(x)
         loss = criterion(pred, y)
 
-        losses.append(loss.item())
-        mIoUs.append(mIoU(pred, y))
-        pixel_accs.append(pixel_accuracy(pred, y))
+        # losses.append(loss.item())
+        losses.update(loss.item())
+        # mIoUs.append(mIoU(pred, y))
+        mIoUs.update(mIoU(pred, y))
+        # pixel_accs.append(pixel_accuracy(pred, y))
+        pixel_accs.update(pixel_accuracy(pred, y))
         
         # if (step+1) % args.print_freq == 0 or (step+1) == len(valloader):
     
-    metrics['loss'] = np.mean(losses)
-    metrics['mIoU'] = np.mean(mIoUs)
-    metrics['PixelAcc'] = np.mean(pixel_accs)
+    # metrics['loss'] = np.mean(losses)
+    metrics['loss'] = losses.avg
+    # metrics['mIoU'] = np.mean(mIoUs)
+    metrics['mIoU'] = mIoUs.avg
+    # metrics['PixelAcc'] = np.mean(pixel_accs)
+    metrics['PixelAcc'] = pixel_accs.avg
     print_log(metrics, epoch=epoch, total_epoch=args.epoch, step=step+1, total_step=len(valloader), phase='val', prnt=logger.info)   
 
-    writer.add_scalar('Loss/val', np.mean(losses), epoch)
-    writer.add_scalar('mIoU/train', np.mean(mIoUs), epoch)
-    writer.add_scalar('PixelAcc/train', np.mean(pixel_accs), epoch)
+    writer.add_scalar('Loss/val', losses.avg, epoch)
+    writer.add_scalar('mIoU/train', mIoUs.avg, epoch)
+    writer.add_scalar('PixelAcc/train', pixel_accs.avg, epoch)
 
     logger.info(f'Saving Checkpoint {epoch}.pth...')
     save(model, os.path.join(args.path, args.name, 'checkpoints'), f'{epoch}.pth')
@@ -160,7 +173,7 @@ def main():
     '''
     MODEL SETTING
     '''
-    model = nn.DataParallel(UNet(num_of_cls=NUM_OF_CLASS+1, use_upconv=False), device_ids=args.gpus).to(device)
+    model = nn.DistributedDataParallel(UNet(num_of_cls=NUM_OF_CLASS+1, use_upconv=False), device_ids=args.gpus).to(device)
     summary(model, input_size=(3, 640, 640))
 
     criterion = nn.CrossEntropyLoss()
@@ -187,6 +200,9 @@ def main():
 
     logger.info(f'[*] Train Finished!!')
     logger.info(f'Total Elapsed Time: {timer.elapsed_time()}')
+
+def main_worker(gpu, ngpus_per_node, config):
+
 
 
 if __name__ == '__main__':
