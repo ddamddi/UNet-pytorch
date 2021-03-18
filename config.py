@@ -18,17 +18,16 @@ def print_params(args: argparse.Namespace, prtf=print):
 
 def train_config():
     parser = argparse.ArgumentParser()
-    parser.add_argument('--gpus', type=str, default='0')
+    parser.add_argument('--gpus', type=str, default='all')
     parser.add_argument('--batch_size', type=int, default=4)
-    parser.add_argument('--init_lr', type=float, default=1e-4)
+    parser.add_argument('--init_lr', type=float, default=5e-4)
     parser.add_argument('--last_lr', type=float, default=0)
-    parser.add_argument('--epoch', type=int, default=100)
-    parser.add_argument('--print_freq', type=int, default=100)
+    parser.add_argument('--epoch', type=int, default=300)
+    parser.add_argument('--print_freq', type=int, default=50)
     parser.add_argument('--seed', type=int, default=1234)
     parser.add_argument('--path', type=str, default='./results')
     parser.add_argument('--name', type=str, default='unet')
     parser.add_argument('--workers', type=int, default=4)
-    parser.add_argument('--dist', action='store_true')
     parser.add_argument('--rank', type=int, default=0)
     parser.add_argument('--world_size', type=int, default=1)
 

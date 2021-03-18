@@ -23,9 +23,10 @@ def get_logger(file_path):
 
 
 class Timer(object):
-    def __init__(self):
+    def __init__(self, first_record=False):
         self.ticks = []
-        self.record()
+        if first_record:
+            self.record()
     
     def record(self):
         self.ticks.append(time.time())
@@ -97,9 +98,12 @@ def load(model, path: str):
     return model
 
 
-def print_log(metrics: dict, epoch: int, total_epoch: int, step: int, total_step: int, phase: str = 'train', prnt=print):
+def print_log(metrics: dict, epoch: int, total_epoch: int, step: int, total_step: int, phase: str = 'train', prnt=print, gpu=None):
     metrics_str = ' '.join(f' {metric}: {value:.5f}' for metric, value in metrics.items())
-    prnt(f'[{phase.upper()}] Epoch {epoch}/{total_epoch} Step {step}/{total_step} {metrics_str}')
+    if gpu == None:
+        prnt(f'[{phase.upper()}] Epoch {epoch}/{total_epoch} Step {step}/{total_step} {metrics_str}')
+    else:
+        prnt(f'GPU{gpu} [{phase.upper()}] Epoch {epoch}/{total_epoch} Step {step}/{total_step} {metrics_str}')
 
 
 if __name__ == '__main__':

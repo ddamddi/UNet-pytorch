@@ -7,7 +7,7 @@ import numpy as np
 
 from model.unet import UNet
 from config import *
-from util import *
+from utils import *
 from visualize import *
 from dataloader import *
 from transforms import ToTensor, Compose, RandomResize, CenterCrop
